@@ -1,21 +1,41 @@
 import {
   IsEmail,
   IsString,
-  IsOptional,
-  IsBoolean,
-  IsIn,
   MinLength,
+  IsOptional,
   IsArray,
+  ArrayUnique,
+  IsIn,
+  IsUrl,
+  ValidateNested,
 } from 'class-validator';
-import { UserModule, UserRole } from '../entities';
+import { Type } from 'class-transformer';
+import type { UserModule } from '../entities/user.entity';
+
+const USER_MODULES: UserModule[] = ['movies', 'anime', 'tv-series', 'books', 'games', 'music'];
+
+class UserSettingsDto {
+  @IsArray()
+  @ArrayUnique()
+  @IsIn(USER_MODULES, { each: true })
+  activeModules!: UserModule[];
+}
 
 export class CreateUserDto {
   @IsEmail() email!: string;
   @IsString() name!: string;
   @IsString() surname!: string;
   @IsString() username!: string;
-  @IsOptional() @MinLength(6) password?: string;
-  @IsIn(['owner', 'admin', 'user', 'test-user']) role: UserRole = 'user';
-  @IsOptional() @IsArray() settings?: { activeModules: UserModule[] };
-  @IsOptional() @IsBoolean() isActive?: boolean;
+
+  @MinLength(6)
+  password!: string; // για register required
+
+  @IsOptional()
+  @IsUrl()
+  avatarUrl?: string;
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => UserSettingsDto)
+  settings?: UserSettingsDto;
 }

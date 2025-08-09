@@ -1,7 +1,7 @@
-import { ConflictException, Injectable } from '@nestjs/common';
+import { ConflictException, Injectable, InternalServerErrorException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { User } from '../entities';
+import { User, UserModule } from '../entities';
 import { CreateUserDto } from '../dto/create-user.dto';
 import * as bcrypt from 'bcrypt';
 import { UpdateUserDto } from '../dto/update-user.dto';
@@ -21,18 +21,40 @@ export class UserService {
     return this.usersRepo.findOne({ where: { id } });
   }
 
-  async create(dto: CreateUserDto): Promise<User> {
-    const user = this.usersRepo.create({
-      ...dto,
-      passwordHash: dto.password ? await bcrypt.hash(dto.password, 10) : null,
-    });
+  async create(dto: CreateUserDto) {
     try {
-      return await this.usersRepo.save(user);
-    } catch (e: any) {
-      if (e.code === '23505') {
-        throw new ConflictException('Email or username already exists');
+      const allowed = new Set<UserModule>([
+        'movies',
+        'anime',
+        'tv-series',
+        'books',
+        'games',
+        'music',
+      ]);
+      const activeModules = dto.settings?.activeModules?.filter((m) => allowed.has(m)) ?? [];
+
+      const passwordHash = await this.hashPassword(dto.password);
+
+      const user = this.usersRepo.create({
+        email: dto.email,
+        name: dto.name,
+        surname: dto.surname,
+        username: dto.username,
+        passwordHash,
+        role: 'user',
+        isActive: true,
+        settings: { activeModules },
+        avatarUrl: dto.avatarUrl?.trim() || null,
+      });
+
+      const saved = await this.usersRepo.save(user);
+      const { passwordHash: _, ...safe } = saved;
+      return safe;
+    } catch (err: any) {
+      if (err?.code === '23505') {
+        throw new ConflictException('Username or email already exists');
       }
-      throw e;
+      throw new InternalServerErrorException();
     }
   }
 
@@ -49,6 +71,14 @@ export class UserService {
     return this.usersRepo.save(entity);
   }
 
+  async findByEmailWithPassword(email: string): Promise<User | null> {
+    return this.usersRepo
+      .createQueryBuilder('u')
+      .addSelect('u.passwordHash')
+      .where('u.emailLower = :emailLower', { emailLower: email.toLowerCase() })
+      .getOne();
+  }
+
   async findByUsernameWithPassword(username: string): Promise<User | null> {
     return this.usersRepo
       .createQueryBuilder('u')
@@ -60,5 +90,9 @@ export class UserService {
   async remove(id: string): Promise<boolean> {
     const result = await this.usersRepo.delete(id);
     return (result.affected ?? 0) > 0;
+  }
+
+  private async hashPassword(plain: string) {
+    return bcrypt.hash(plain, 10);
   }
 }

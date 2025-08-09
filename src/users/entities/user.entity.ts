@@ -44,7 +44,7 @@ export class User {
   @Column({ name: 'password_hash', type: 'text', nullable: true, select: false })
   passwordHash?: string | null;
 
-  @Column({ type: 'text', default: 'owner' })
+  @Column({ type: 'text', default: 'user' })
   role!: UserRole;
 
   @Column({ type: 'jsonb', default: () => `'{ "activeModules": [] }'` })
@@ -55,6 +55,9 @@ export class User {
 
   @Column({ name: 'last_seen_at', type: 'timestamptz', nullable: true })
   lastSeenAt?: Date | null;
+
+  @Column({ name: 'avatar_url', type: 'text', nullable: true })
+  avatarUrl?: string | null;
 
   get activeModules(): UserModule[] {
     const mods = this.settings?.activeModules;
