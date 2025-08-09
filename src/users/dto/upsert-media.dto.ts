@@ -8,7 +8,7 @@ import {
   Max,
   Min,
 } from 'class-validator';
-import { EntryStatus, MediaType } from '../user-media-entry.entity';
+import { EntryStatus, MediaType } from '../entities/user-media-entry.entity';
 
 export class UpsertMediaDto {
   @IsIn(['anime', 'movie', 'tv', 'music', 'book', 'game'])

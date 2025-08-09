@@ -1,3 +1,4 @@
+// user-media-entry.entity.ts
 import {
   Entity,
   PrimaryGeneratedColumn,
@@ -43,7 +44,7 @@ export class UserMediaEntry {
   posterUrl?: string | null;
 
   @Column({ name: 'release_date', type: 'date', nullable: true })
-  releaseDate?: string | null; // ISO date string (YYYY-MM-DD)
+  releaseDate?: string | null;
 
   @Column({
     name: 'user_rating_10',
@@ -63,6 +64,18 @@ export class UserMediaEntry {
 
   @Column({ type: 'boolean', default: false })
   favorite!: boolean;
+
+  @Column({ type: 'boolean', default: false })
+  hated!: boolean;
+
+  @Column({ type: 'text', nullable: true })
+  review?: string | null;
+
+  @Column({ name: 'num_episodes', type: 'integer', nullable: true })
+  numEpisodes?: number | null;
+
+  @Column({ name: 'average_episode_duration', type: 'integer', nullable: true })
+  averageEpisodeDuration?: number | null;
 
   @Column({ type: 'text', nullable: true })
   notes?: string | null;

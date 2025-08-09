@@ -9,15 +9,9 @@ import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true, envFilePath: '.env' }),
+    ConfigModule.forRoot({ isGlobal: true }),
     TypeOrmModule.forRootAsync({
       useFactory: () => {
-        console.log('DB ENV =>', {
-          host: process.env.DB_HOST,
-          user: process.env.DB_USER,
-          pass_len: process.env.DB_PASS?.length,
-          name: process.env.DB_NAME,
-        });
         return {
           type: 'postgres',
           host: process.env.DB_HOST,
@@ -27,7 +21,7 @@ import { AuthModule } from './auth/auth.module';
           database: process.env.DB_NAME,
           ssl: false,
           autoLoadEntities: true,
-          synchronize: false,
+          synchronize: true,
         };
       },
     }),
